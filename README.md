@@ -14,12 +14,13 @@
 # Instruction
 
 1. Modify Global Parameter if necessary
-1. Collect the Text File
-1. Login https://app.diagrams.net/
+1. Run the script to generate **Diagram CSV File**
+1. Login **https://app.diagrams.net**
 1. From the Web Console, click Arrange > Insert > Advanced > CSV
-1. Copy the content of CSV File and overwrite the input field in Web Console
+1. Remove all contents in CSV field
+1. Copy and paste the content of **Diagram CSV File** in CSV field
 1. Click Import
-1. If you would like to save as other format, Click File > Export as  
+1. [Optional] Save as other format by Click File > Export as
 
 # Baseline 
 
@@ -39,6 +40,14 @@
 - Subnet(s) of Virtual Network is not shown
 - IP Addresses are not shown
 - Subscription or Resource not found message could be ignore if the user account do not have access to all peered virtual network
+
+# Sample
+
+This is the diagram of the attached sample diagrams csv file, exported from **https://app.diagrams.net** as PNG format
+
+<div>
+    <img src="https://github.com/ichiche/Azure-VNet-Diagram/blob/main/diagrams_csv_sample.png" title="Diagram" alt="Diagram"
+</div>
 
 # Additional Information
 
