@@ -1,5 +1,5 @@
 # Global Parameter
-$SpecificTenant = "" # "Y" or "N"
+$SpecificTenant = "N" # "Y" or "N"
 $TenantId = "" # Enter Tenant ID if $SpecificTenant is "Y"
 $TextFileFullPath = "C:\Temp\DiagramsNet-Format.txt" # Export Result to Text file 
 
@@ -70,7 +70,7 @@ function Find-vNetPeeringRecord {
 }
 
 function Update-vNetArray-Ordering {
-    $Global:vNet = $Global:vNet | sort @{e='VirtualNetworkGateway';desc=$true}, VirtualNetworkGatewayType,  @{e='PeeringCount';desc=$true}, VirtualNetwork
+    $Global:vNet = $Global:vNet | sort @{e='VirtualNetworkGateway';desc=$true}, SortOrder,  @{e='PeeringCount';desc=$true}, VirtualNetwork
 }
 
 # Main
@@ -86,22 +86,34 @@ foreach ($Subscription in $Global:Subscriptions) {
     foreach ($vn in $vns) {
         if ($vn.ResourceGroupName -notlike "databricks-rg*") {
             $GatewayInstance = $null
-            $GatewayInstance = $vn.Subnets.IpConfigurations.Id | ? {$_ -like "*providers/Microsoft.Network/virtualNetworkGateways/*"} | select -First 1
+            $GatewayInstance = $vn.Subnets.IpConfigurations.Id | ? {$_ -like "*providers/Microsoft.Network/virtualNetworkGateways/*"} #| select -First 1
 
-            if ($GatewayInstance -ne $null) {
-
-                Write-Host ($vn.Name + " is deployed with Virtual Network Gateway`n")
+            if ($GatewayInstance.Count -gt 1) {
+                Write-Host ($vn.Name + " is deployed with ExpressRoute and VPN Virtual Network Gateway`n")
+                $IsGateway = "Y"
+                $GatewayType = "ExpressRouteVpnCoexist"
+                $SortOrder = 1
+            } elseif ($GatewayInstance -ne $null) {
                 $IsGateway = "Y"
                 $GatewayName = $GatewayInstance.Substring($GatewayInstance.IndexOf("providers/Microsoft.Network/virtualNetworkGateways/") + "providers/Microsoft.Network/virtualNetworkGateways/".Length)
                 $GatewayName = $GatewayName.Substring(0, $GatewayName.IndexOf("/ipConfigurations"))
                 $GatewayType = $vngs | ? {$_.Name -eq $GatewayName} | select -ExpandProperty GatewayType
 
-                if ($GatewayType -eq $null) {
+                if ($GatewayType -eq "ExpressRoute") {
+                    Write-Host ($vn.Name + " is deployed with ExpressRoute Virtual Network Gateway`n")
+                    $SortOrder = 2
+                } elseif ($GatewayType -eq "Vpn") {
+                    Write-Host ($vn.Name + " is deployed with VPN Virtual Network Gateway`n")
+                    $SortOrder = 3
+                } elseif ($GatewayType -eq $null) {
+                    Write-Host ($vn.Name + " is deployed with Virtual Network Gateway but encounter Access Right problem`n")
                     $GatewayType = "NoAccessRight"
+                    $SortOrder = 5
                 }
             } else {
                 $IsGateway = "N"
                 $GatewayType = "N/A"
+                $SortOrder = 4
             }
 
             $Location = Rename-Location -Location $vn.Location
@@ -133,6 +145,7 @@ foreach ($Subscription in $Global:Subscriptions) {
             Add-Member -InputObject $obj -MemberType NoteProperty -Name "VirtualNetworkGatewayType" -Value $GatewayType
             Add-Member -InputObject $obj -MemberType NoteProperty -Name "UniqueId" -Value $TempId 
             Add-Member -InputObject $obj -MemberType NoteProperty -Name "PeeringCount" -Value $peering.Count
+            Add-Member -InputObject $obj -MemberType NoteProperty -Name "SortOrder" -Value $SortOrder
 
             # Save to Array
             $Global:vNet  += $obj
@@ -196,6 +209,7 @@ foreach ($vn in $Global:vNet) {
 }
 
 # Process Second Layer of the Destination Endpoint Virtual Network with ER / VPN Gateway if exist
+
 if ($Global:vNetPeering.Count -ne 0) {
     foreach ($vNetWithGateway in $Global:vNetPeering) {
         $AzContext = Set-AzContext -SubscriptionId $vNetWithGateway.DestinationEndpointSubscriptionId -TenantId $TenantId
@@ -347,7 +361,7 @@ for ($i = $vNetPeeringCurrentIndex; $i -lt $Global:vNetPeering.Count; $i++) {
 }
 
 # Reserve 
-# Record the current index of peering list for n-tier peering lookup
+# Record the current index of peering list for n-tier peering lookup (Not implemented yet)
 $vNetPeeringCurrentIndex = $Global:vNetPeering.Count
 
 # Supplement the Unique ID for the Virtual Network that has no access permission
@@ -383,6 +397,7 @@ foreach ($item in $Global:vNetPeering) {
             Add-Member -InputObject $obj -MemberType NoteProperty -Name "VirtualNetworkGatewayType" -Value "N/A"
             Add-Member -InputObject $obj -MemberType NoteProperty -Name "UniqueId" -Value $item.DestinationEndpointUniqueId
             Add-Member -InputObject $obj -MemberType NoteProperty -Name "PeeringCount" -Value 1
+            Add-Member -InputObject $obj -MemberType NoteProperty -Name "SortOrder" -Value 5
             $Global:vNet  += $obj
         } else {
             $item.DestinationEndpointUniqueId = $Global:vNet | ? {$_.VirtualNetworkId -eq $item.DestinationEndpointId} | select -ExpandProperty UniqueId
@@ -398,8 +413,9 @@ $CsvFileContent = @"
 ## Supply chain tracking
 # label: %name%
 # stylename: shapeType
-# styles: {"vNetWithVPNGateway": "rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;", \
-#		   "vNetWithERGateway": "rounded=1;fillColor=#c4bbf0;strokeColor=#9f87e8;", \
+# styles: {"vNetwithBothVPN_ER_Gateway": "rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;", \
+#          "vNetWithERGateway": "rounded=1;fillColor=#c4bbf0;strokeColor=#9f87e8;", \
+#          "vNetWithVPNGateway": "rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;", \
 #          "vNet":"shape=ellipse;fillColor=#f5f5f5;strokeColor=#5e5e5e;perimeter=ellipsePerimeter;", \
 #          "vNetWithNoPeering":"shape=ellipse;fillColor=#f8cecc;strokeColor=#b85450;perimeter=ellipsePerimeter"}
 # namespace: csvimport-
@@ -422,6 +438,8 @@ foreach ($vn in $Global:vNet) {
     $name = $vn.VirtualNetwork
     $supplier = ""
 
+    Write-Host ("id: " + $id + " VNet Name: " + $name)
+
     foreach ($item in $Global:vNetPeering) {
         if ($item.DestinationEndpointUniqueId -eq $vn.UniqueId) {
                 if ($supplier -ne "") {
@@ -437,7 +455,9 @@ foreach ($vn in $Global:vNet) {
         $supplier += '"'
     }
 
-    if ($vn.VirtualNetworkGatewayType -eq "ExpressRoute") {
+    if ($vn.VirtualNetworkGatewayType -eq "ExpressRouteVpnCoexist") {
+        $shapeType = "vNetwithBothVPN_ER_Gateway"
+    } elseif ($vn.VirtualNetworkGatewayType -eq "ExpressRoute") {
         $shapeType = "vNetWithERGateway"
     } elseif ($vn.VirtualNetworkGatewayType -eq "Vpn") {
         $shapeType = "vNetWithVPNGateway"

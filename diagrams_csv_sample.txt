@@ -1,8 +1,9 @@
 ## Supply chain tracking
 # label: %name%
 # stylename: shapeType
-# styles: {"vNetWithVPNGateway": "rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;", \
-#		   "vNetWithERGateway": "rounded=1;fillColor=#c4bbf0;strokeColor=#9f87e8;", \
+# styles: {"vNetwithBothVPN_ER_Gateway": "rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;", \
+#          "vNetWithERGateway": "rounded=1;fillColor=#c4bbf0;strokeColor=#9f87e8;", \
+#          "vNetWithVPNGateway": "rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;", \
 #          "vNet":"shape=ellipse;fillColor=#f5f5f5;strokeColor=#5e5e5e;perimeter=ellipsePerimeter;", \
 #          "vNetWithNoPeering":"shape=ellipse;fillColor=#f8cecc;strokeColor=#b85450;perimeter=ellipsePerimeter"}
 # namespace: csvimport-
@@ -17,10 +18,9 @@
 # layout: horizontalflow
 ## CSV starts below this line
 id,name,supplier,shapeType
-fa,East Asia vNet with ER Gateway,,vNetWithERGateway
-fb,Southeast Asia vNet with VPN Gateway,,vNetWithVPNGateway
-man1,EAS Spoke 1,fa,vNet
-man2,EAS Spoke 2,fa,vNet
-man3,SEA Spoke 1,fb,vNet
-man5,Transitive Site,man1,vNet
-ca,Standalone vNet,,vNetWithNoPeering
+v001,vnet-hub-prd-eus-001,,vNetwithBothVPN_ER_Gateway
+v006,vnet-hub-prd-sea-001,,vNetWithERGateway
+v005,vnet-hub-prd-eas-001,"v006",vNetWithVPNGateway
+v002,vnet-spoke-prd-eus-001,"v001",vNet
+v003,vnet-spoke-prd-eus-002,"v002",vNet
+v004,vnet-standalone-prd-eas-001,,vNetWithNoPeering
