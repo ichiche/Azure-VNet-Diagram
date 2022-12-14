@@ -54,7 +54,7 @@ This is the diagram of the attached sample diagrams csv file, exported from **ht
 
 ### Color
 
-- Green (Both VPN and ER Gateway exist, with/without peer)
+- Green (ER and VPN Gateway coexist, with/without peer)
 - Purple (ER Gateway exist, with/without peer)
 - Blue (VPN Gateway exist, with/without peer)
 - White (No Gateway, but peered to other VNet)
