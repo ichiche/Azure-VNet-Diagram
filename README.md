@@ -25,7 +25,7 @@
 
 # Baseline 
 
-**The network flow diagram are generated in in order of preference, not enforced in fact**
+**The network flow diagram are generated in below preferred order, not enforced**
 
 1. Virtual Network With ExpressRoute Gateway and VPN Gateway coexist
 1. Virtual Network with ExpressRoute Gateway
@@ -51,6 +51,14 @@ This is the diagram of the attached sample diagrams csv file, exported from **ht
 <div>
     <img src="https://github.com/ichiche/Azure-VNet-Diagram/blob/main/diagrams_csv_sample.png" title="Diagram" alt="Diagram"
 </div>
+
+### Color
+
+- Green (Both VPN and ER Gateway exist, with/without peer)
+- Purple (ER Gateway exist, with/without peer)
+- Blue (VPN Gateway exist, with/without peer)
+- White (No Gateway, but peered to other VNet)
+- Red (No Gateway and peer exist)
 
 # Additional Information
 
